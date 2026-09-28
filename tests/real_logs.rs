@@ -82,12 +82,22 @@ fn empty_log() {
 
 #[test]
 fn checksums_written_by_windows_validate() {
-    let Some(bytes) = fixture("system.evtx") else { return };
+    let Some(bytes) = fixture("system.evtx") else {
+        return;
+    };
     let file = EvtxFile::new(&bytes).unwrap();
     assert!(file.header().checksum_valid, "file header CRC-32");
     for chunk in file.chunks() {
         let chunk = chunk.unwrap();
-        assert!(chunk.header().header_checksum_valid, "chunk header CRC-32 at {}", chunk.offset());
-        assert!(chunk.header().records_checksum_valid, "records CRC-32 at {}", chunk.offset());
+        assert!(
+            chunk.header().header_checksum_valid,
+            "chunk header CRC-32 at {}",
+            chunk.offset()
+        );
+        assert!(
+            chunk.header().records_checksum_valid,
+            "records CRC-32 at {}",
+            chunk.offset()
+        );
     }
 }
