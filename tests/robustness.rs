@@ -1,7 +1,7 @@
 //! Hostile input: the parser must report damage, never panic.
 
-use evtx::{ErrorKind, EvtxFile, CHUNK_SIZE, FILE_HEADER_SIZE};
 use proptest::prelude::*;
+use sootmark_evtx::{ErrorKind, EvtxFile, CHUNK_SIZE, FILE_HEADER_SIZE};
 
 /// Parse everything; count what comes out. Panics are the only failure.
 fn parse_all(bytes: &[u8]) -> (usize, usize) {

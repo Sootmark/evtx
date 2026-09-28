@@ -2,9 +2,14 @@
 
 A Windows Event Log (`.evtx`) parser, written from the format up: file and chunk headers, checksums, BinXML, templates, substitutions and every value type found in real logs.
 
+```toml
+[dependencies]
+sootmark-evtx = "0.1"
+```
+
 ```rust
 let bytes = std::fs::read("Security.evtx")?;
-let file = evtx::EvtxFile::new(&bytes)?;
+let file = sootmark_evtx::EvtxFile::new(&bytes)?;
 for chunk in file.chunks() {
     for record in chunk?.records() {
         match record {

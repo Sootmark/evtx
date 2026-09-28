@@ -2,7 +2,7 @@
 //!
 //! ```no_run
 //! let bytes = std::fs::read("Security.evtx")?;
-//! let file = evtx::EvtxFile::new(&bytes)?;
+//! let file = sootmark_evtx::EvtxFile::new(&bytes)?;
 //! for chunk in file.chunks() {
 //!     for record in chunk?.records() {
 //!         match record {

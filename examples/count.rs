@@ -6,7 +6,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for path in std::env::args().skip(1) {
         let bytes = std::fs::read(&path)?;
         let started = Instant::now();
-        let file = evtx::EvtxFile::new(&bytes)?;
+        let file = sootmark_evtx::EvtxFile::new(&bytes)?;
         let (mut records, mut damaged) = (0usize, 0usize);
         for chunk in file.chunks() {
             for record in chunk?.records() {

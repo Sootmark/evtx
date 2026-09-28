@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 
-use evtx::EvtxFile;
+use sootmark_evtx::EvtxFile;
 
 struct Summary {
     records: usize,
