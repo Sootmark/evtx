@@ -37,17 +37,8 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
 name = "common"
-version = "0.1.0"
-source = "git+https://github.com/Sootmark/common?tag=v0.1.0#6123b79f676ee95245d33ef81b8004d708453241"
-
-[[package]]
-name = "crc32fast"
-version = "1.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01a7799fd6b852db0e61728dde9a204c423b44d689dbd432522543614b490e78"
-dependencies = [
- "cfg-if",
-]
+version = "0.2.0"
+source = "git+https://github.com/Sootmark/common?tag=v0.2.0#cad01e32bff7353dfbc17023f21ecb5fc7e153d6"
 
 [[package]]
 name = "errno"
@@ -61,10 +52,9 @@ dependencies = [
 
 [[package]]
 name = "evtx"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "common",
- "crc32fast",
  "proptest",
 ]
 

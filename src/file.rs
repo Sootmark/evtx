@@ -1,6 +1,7 @@
 //! The file header and chunk iteration.
 
 use common::bytes::Reader;
+use common::checksum::Crc32;
 
 use crate::chunk::{Chunk, CHUNK_SIZE};
 use crate::error::{Error, ErrorKind, Result};
@@ -105,6 +106,6 @@ fn read_header(data: &[u8]) -> Result<FileHeader> {
         chunk_count,
         is_dirty: flags & DIRTY_FLAG != 0,
         is_full: flags & FULL_FLAG != 0,
-        checksum_valid: crc32fast::hash(&data[..CHECKSUMMED_HEADER]) == checksum,
+        checksum_valid: Crc32::of(&data[..CHECKSUMMED_HEADER]) == checksum,
     })
 }

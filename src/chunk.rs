@@ -1,6 +1,7 @@
 //! Chunks and the records inside them.
 
 use common::bytes::Reader;
+use common::checksum::Crc32;
 
 use crate::binxml::Parser;
 use crate::error::{Error, ErrorKind, Result};
@@ -121,16 +122,15 @@ fn read_header(data: &[u8], offset: u64) -> Result<ChunkHeader> {
         last_record_id,
         free_space_offset,
         header_checksum_valid: header_checksum == header_crc(data),
-        records_checksum_valid: records_checksum
-            == crc32fast::hash(&data[RECORDS_START..records_end]),
+        records_checksum_valid: records_checksum == Crc32::of(&data[RECORDS_START..records_end]),
     })
 }
 
 fn header_crc(data: &[u8]) -> u32 {
-    let mut hasher = crc32fast::Hasher::new();
-    hasher.update(&data[..CHECKSUM_GAP.start]);
-    hasher.update(&data[CHECKSUM_GAP.end..RECORDS_START]);
-    hasher.finalize()
+    let mut crc = Crc32::new();
+    crc.update(&data[..CHECKSUM_GAP.start]);
+    crc.update(&data[CHECKSUM_GAP.end..RECORDS_START]);
+    crc.finalize()
 }
 
 /// Iterator over a chunk's records. See [`Chunk::records`].
