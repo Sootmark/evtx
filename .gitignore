@@ -1,0 +1,4 @@
+/target
+.DS_Store
+# Real event logs are not redistributable; drop local copies here.
+/tests/fixtures/*.evtx
