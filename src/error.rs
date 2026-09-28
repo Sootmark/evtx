@@ -34,20 +34,25 @@ pub enum ErrorKind {
     NoRootElement,
 }
 
+impl fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotEvtx => f.write_str("not an EVTX file (bad file signature)"),
+            Self::BadChunkSignature => f.write_str("bad chunk signature"),
+            Self::BadRecordSignature => f.write_str("bad record signature"),
+            Self::BadRecordSize(size) => write!(f, "impossible record size {size}"),
+            Self::Read(read) => f.write_str(&describe_read(read)),
+            Self::UnknownToken(token) => write!(f, "unknown BinXML token 0x{token:02x}"),
+            Self::UnknownValueType(ty) => write!(f, "unknown value type 0x{ty:02x}"),
+            Self::TooDeep => f.write_str("nesting too deep"),
+            Self::NoRootElement => f.write_str("record has no root element"),
+        }
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let what = match &self.kind {
-            ErrorKind::NotEvtx => "not an EVTX file (bad file signature)".to_owned(),
-            ErrorKind::BadChunkSignature => "bad chunk signature".to_owned(),
-            ErrorKind::BadRecordSignature => "bad record signature".to_owned(),
-            ErrorKind::BadRecordSize(size) => format!("impossible record size {size}"),
-            ErrorKind::Read(read) => describe_read(read),
-            ErrorKind::UnknownToken(token) => format!("unknown BinXML token 0x{token:02x}"),
-            ErrorKind::UnknownValueType(ty) => format!("unknown value type 0x{ty:02x}"),
-            ErrorKind::TooDeep => "nesting too deep".to_owned(),
-            ErrorKind::NoRootElement => "record has no root element".to_owned(),
-        };
-        write!(f, "{what} at offset {}", self.offset)
+        write!(f, "{} at offset {}", self.kind, self.offset)
     }
 }
 
