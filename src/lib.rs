@@ -17,6 +17,9 @@
 //! Damage is contained: a corrupt record is reported and skipped, a corrupt
 //! chunk doesn't stop the next one, and hostile input never panics.
 
+/// This parser's version, for provenance in the records it produces.
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 mod binxml;
 mod chunk;
 mod error;
