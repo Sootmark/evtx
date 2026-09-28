@@ -48,6 +48,27 @@ fn rejects_non_evtx_files() {
 }
 
 #[test]
+fn a_truncated_copy_reports_its_partial_chunk() {
+    let Some(log) = real_log() else { return };
+    let cut = FILE_HEADER_SIZE + CHUNK_SIZE + 30_000;
+    let file = EvtxFile::new(&log[..cut]).unwrap();
+    let chunks: Vec<_> = file.chunks().collect();
+    assert_eq!(chunks.len(), 2, "the whole chunk, then the partial one");
+    assert!(chunks[0].is_ok());
+    let error = chunks[1].as_ref().unwrap_err();
+    assert_eq!(error.kind, ErrorKind::TruncatedChunk(30_000));
+    assert_eq!(error.offset, (FILE_HEADER_SIZE + CHUNK_SIZE) as u64);
+}
+
+#[test]
+fn trailing_zero_padding_is_not_truncation() {
+    let mut bytes = file_with_one_chunk(&[]);
+    bytes.extend([0u8; 512]);
+    let file = EvtxFile::new(&bytes).unwrap();
+    assert!(file.chunks().all(|c| c.is_ok()));
+}
+
+#[test]
 fn a_bad_chunk_does_not_stop_the_file() {
     let mut bytes = file_with_one_chunk(&[]);
     bytes.extend(std::iter::repeat(0xAB).take(CHUNK_SIZE)); // garbage second chunk

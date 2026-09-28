@@ -67,16 +67,27 @@ impl<'a> EvtxFile<'a> {
     ///
     /// The file is walked by size rather than trusting the header's chunk
     /// count, which lags behind in dirty logs. Unused (all-zero) chunk slots
-    /// are skipped.
+    /// are skipped. A file that ends inside a chunk (a truncated copy) yields
+    /// [`ErrorKind::TruncatedChunk`] for the partial chunk, never silence.
     pub fn chunks(&self) -> impl Iterator<Item = Result<Chunk<'a>>> + '_ {
         let data = self.data;
-        let slots = data.len().saturating_sub(FILE_HEADER_SIZE) / CHUNK_SIZE;
-        (0..slots).filter_map(move |slot| {
+        let body = data.len().saturating_sub(FILE_HEADER_SIZE);
+        let slots = body / CHUNK_SIZE;
+        let whole = (0..slots).filter_map(move |slot| {
             let start = FILE_HEADER_SIZE + slot * CHUNK_SIZE;
             let bytes = &data[start..start + CHUNK_SIZE];
             let unused = bytes[..8].iter().all(|&b| b == 0);
             (!unused).then(|| Chunk::new(bytes, start as u64))
-        })
+        });
+        let tail_start = FILE_HEADER_SIZE + slots * CHUNK_SIZE;
+        let tail = data.get(tail_start..).unwrap_or_default();
+        let partial = (!tail.is_empty() && tail.iter().any(|&b| b != 0)).then(|| {
+            Err(Error::new(
+                tail_start as u64,
+                ErrorKind::TruncatedChunk(tail.len()),
+            ))
+        });
+        whole.chain(partial)
     }
 }
 

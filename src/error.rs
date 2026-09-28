@@ -11,8 +11,9 @@ pub struct Error {
     pub kind: ErrorKind,
 }
 
-/// The kind of parsing failure.
+/// The kind of parsing failure. New kinds may be added.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ErrorKind {
     /// The file doesn't start with `ElfFile\0`.
     NotEvtx,
@@ -32,6 +33,8 @@ pub enum ErrorKind {
     TooDeep,
     /// A record contains no root element.
     NoRootElement,
+    /// The file ends inside a chunk: this many bytes of it are present.
+    TruncatedChunk(usize),
 }
 
 impl fmt::Display for ErrorKind {
@@ -46,6 +49,10 @@ impl fmt::Display for ErrorKind {
             Self::UnknownValueType(ty) => write!(f, "unknown value type 0x{ty:02x}"),
             Self::TooDeep => f.write_str("nesting too deep"),
             Self::NoRootElement => f.write_str("record has no root element"),
+            Self::TruncatedChunk(length) => write!(
+                f,
+                "file ends inside a chunk ({length} of 65536 bytes present)"
+            ),
         }
     }
 }
