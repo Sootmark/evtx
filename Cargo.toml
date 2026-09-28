@@ -1,6 +1,6 @@
 [package]
 name = "evtx"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 rust-version = "1.80"
 description = "Windows Event Log (.evtx) parser: file and chunk headers, BinXML, templates, typed values."
@@ -9,7 +9,7 @@ repository = "https://github.com/Sootmark/evtx"
 publish = false
 
 [dependencies]
-common = { git = "https://github.com/Sootmark/common", tag = "v0.3.0", version = "0.3.0" }
+common = { git = "https://github.com/Sootmark/common", tag = "v0.3.1", version = "0.3.1" }
 
 [dev-dependencies]
 proptest = "1"
