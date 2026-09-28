@@ -9,7 +9,7 @@ repository = "https://github.com/Sootmark/evtx"
 publish = false
 
 [dependencies]
-common = { git = "ssh://git@github.com/Sootmark/common.git", tag = "v0.1.0", version = "0.1.0" }
+common = { git = "https://github.com/Sootmark/common", tag = "v0.1.0", version = "0.1.0" }
 crc32fast = "1"
 
 [dev-dependencies]

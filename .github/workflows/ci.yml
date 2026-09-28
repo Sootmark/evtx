@@ -17,10 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Read-only deploy key for the private Sootmark/common dependency.
-      - uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.COMMON_DEPLOY_KEY }}
       - uses: dtolnay/rust-toolchain@1.94.1
         with:
           components: rustfmt, clippy

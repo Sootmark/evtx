@@ -38,7 +38,7 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Sootmark/common.git?tag=v0.1.0#6123b79f676ee95245d33ef81b8004d708453241"
+source = "git+https://github.com/Sootmark/common?tag=v0.1.0#6123b79f676ee95245d33ef81b8004d708453241"
 
 [[package]]
 name = "crc32fast"

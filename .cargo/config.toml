@@ -1,3 +1,0 @@
-[net]
-# Use the system git (and its SSH keys) to fetch private Sootmark dependencies.
-git-fetch-with-cli = true
