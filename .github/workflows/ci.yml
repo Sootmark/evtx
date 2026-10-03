@@ -28,6 +28,15 @@ jobs:
         run: cargo clippy --all-targets --locked
       - name: Test
         run: cargo test --locked
+      - name: Test on every open log
+        run: |
+          dir="$RUNNER_TEMP/evtx"
+          mkdir -p "$dir"
+          curl -sSfL https://codeload.github.com/mdecrevoisier/EVTX-to-MITRE-Attack/tar.gz/474856008f037ccd42753f02a631b42690195829 | tar -xz -C "$dir"
+          curl -sSfL https://codeload.github.com/omerbenamram/evtx/tar.gz/f0723198e50ae73de83ce4f2f1734fe3f6db5506 | tar -xz -C "$dir" --wildcards '*/samples/*'
+          SOOTMARK_EVTX_CC0="$dir/EVTX-to-MITRE-Attack-474856008f037ccd42753f02a631b42690195829" \
+          SOOTMARK_EVTX_SAMPLES="$dir/evtx-f0723198e50ae73de83ce4f2f1734fe3f6db5506/samples" \
+            cargo test --locked --release --test open_samples
       - name: Docs
         run: cargo doc --no-deps --locked
         env:

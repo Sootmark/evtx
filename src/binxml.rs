@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use common::bytes::{self, Reader};
 use common::text;
 
+use crate::chunk::RECORDS_START;
 use crate::error::{Error, ErrorKind, Result};
 use crate::tree::{Attribute, Element, Node};
 use crate::value::{self, Value, ValueError, ValueType};
@@ -61,6 +62,26 @@ struct Context<'v> {
     /// Inside an embedded BinXML value, where start elements have no
     /// dependency identifier.
     in_embedded_value: bool,
+}
+
+/// Whether the element start at `r` (past its token) records a dependency
+/// identifier before its data size. Elements written outside a template,
+/// as in forwarded events, leave it out. The name offset that follows tells
+/// them apart: it points just past itself (a name written inline) or back
+/// to a name earlier in the records. When only the reading without the
+/// identifier does that, there is none.
+fn has_dependency_identifier(r: &Reader<'_>) -> bool {
+    let Ok(fields) = r.peek(10) else {
+        return true;
+    };
+    let at = r.position();
+    let names_a_name = |offset: [u8; 4], end: usize| {
+        let offset = u32::from_le_bytes(offset) as usize;
+        offset == end || (RECORDS_START..at).contains(&offset)
+    };
+    let with = names_a_name([fields[6], fields[7], fields[8], fields[9]], at + 10);
+    let without = names_a_name([fields[4], fields[5], fields[6], fields[7]], at + 8);
+    with || !without
 }
 
 impl Context<'_> {
@@ -143,8 +164,8 @@ impl<'c> Parser<'c> {
 
     fn element(&mut self, r: &mut Reader<'c>, token: u8, ctx: Context<'_>) -> Result<Element> {
         let ctx = ctx.deeper(self.at(r))?;
-        if !ctx.in_embedded_value {
-            self.u16(r)?; // dependency identifier
+        if !ctx.in_embedded_value && has_dependency_identifier(r) {
+            self.u16(r)?;
         }
         self.u32(r)?; // data size
         let name = self.name(r)?;

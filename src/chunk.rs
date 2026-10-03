@@ -12,7 +12,7 @@ use crate::tree::Node;
 pub const CHUNK_SIZE: usize = 65_536;
 const CHUNK_SIGNATURE: &[u8; 8] = b"ElfChnk\0";
 /// Records start after the header and the name/template offset tables.
-const RECORDS_START: usize = 512;
+pub(crate) const RECORDS_START: usize = 512;
 /// The header checksum covers bytes 0..120 and 128..512.
 const CHECKSUM_GAP: core::ops::Range<usize> = 120..128;
 /// Where the header checksum itself is stored (inside the gap).
@@ -153,8 +153,15 @@ impl Iterator for Records<'_> {
         let damaged = |error| DamagedRecord { offset, error };
         match self.frame(start) {
             Ok(frame) => {
-                self.position = start + frame.size;
-                Some(self.decode(&frame).map_err(damaged))
+                let record = self.decode(&frame);
+                // A trailer that disagrees leaves the size in doubt; a body
+                // that decodes vouches for it.
+                self.position = if record.is_err() && !frame.trailer_agrees {
+                    self.end
+                } else {
+                    start + frame.size
+                };
+                Some(record.map_err(damaged))
             }
             Err(error) => {
                 // The record's size can't be trusted, so the next record
@@ -171,6 +178,8 @@ struct Frame {
     /// Chunk offset where the record starts.
     start: usize,
     size: usize,
+    /// Whether the size copy after the body matches the header's.
+    trailer_agrees: bool,
     id: u64,
     written: u64,
     body: core::ops::Range<usize>,
@@ -180,26 +189,28 @@ impl Records<'_> {
     fn frame(&self, start: usize) -> Result<Frame> {
         let offset = self.chunk.offset + start as u64;
         let read = |e: common::bytes::Error| Error::from_read(self.chunk.offset, &e);
-        let mut r = Reader::new(&self.chunk.data[..self.end]);
+        // A record starts before the free space but may end past it: in a
+        // dirty chunk the header's free space offset lags the records.
+        let data = self.chunk.data;
+        let mut r = Reader::new(data);
         r.seek(start).map_err(read)?;
         if r.array::<4>().map_err(read)? != RECORD_SIGNATURE {
             return Err(Error::new(offset, ErrorKind::BadRecordSignature));
         }
         let size_field = r.u32_le().map_err(read)?;
         let size = size_field as usize;
-        let fits = size >= RECORD_HEADER_SIZE + RECORD_TRAILER_SIZE && start + size <= self.end;
+        let fits = size >= RECORD_HEADER_SIZE + RECORD_TRAILER_SIZE && start + size <= data.len();
         if !fits {
             return Err(Error::new(offset, ErrorKind::BadRecordSize(size_field)));
         }
         let id = r.u64_le().map_err(read)?;
         let written = r.u64_le().map_err(read)?;
         r.seek(start + size - RECORD_TRAILER_SIZE).map_err(read)?;
-        if r.u32_le().map_err(read)? != size_field {
-            return Err(Error::new(offset, ErrorKind::BadRecordSize(size_field)));
-        }
+        let trailer_agrees = r.u32_le().map_err(read)? == size_field;
         Ok(Frame {
             start,
             size,
+            trailer_agrees,
             id,
             written,
             body: start + RECORD_HEADER_SIZE..start + size - RECORD_TRAILER_SIZE,

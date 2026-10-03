@@ -39,12 +39,10 @@ Evidence is hostile. A corrupt record is reported with its offset and skipped; a
 
 | Check | Result |
 |---|---|
-| Record counts on real Windows 10 logs (Security, System, Application, Setup, empty) | exact match with known counts, 0 damaged records |
-| Differential test against the independent `evtx` crate, field by field, 14,041 records | 0 mismatches in System fields and EventData (after normalising documented formatting differences: GUID braces, trailing padding, 100 ns vs µs) |
-| Random bytes behind valid signatures, and randomly corrupted real chunks | no panic (20,000 corrupted chunks in a long run; 256 per CI run) |
-| Throughput (one thread, release) | 55–255 MiB/s depending on template density |
+| Every record of 320 openly licensed logs against [omerbenamram/evtx](https://github.com/omerbenamram/evtx)'s `evtx_dump`: record id, event id, time created, provider, channel, computer | 114,932 records match; one more, slack that `evtx_dump` renders as an event (record id 0, invalid SID), is reported here as damaged |
+| Random bytes behind valid signatures, and randomly corrupted chunks | no panic (256 per CI run) |
 
-The real logs come from a training image and are not redistributable. Put local copies in `tests/fixtures/` to run those suites; without them they are skipped.
+The logs: [EVTX-to-MITRE-Attack](https://github.com/mdecrevoisier/EVTX-to-MITRE-Attack) (CC0-1.0, 293 logs of attacks on Windows 10 and Windows Server: Security, Sysmon, PowerShell, Defender, RDP, forwarded events, …; twenty of them in `tests/fixtures/cc0/`) and omerbenamram/evtx's samples (MIT or Apache-2.0: dirty, damaged and forwarded logs). `evtx_dump`'s output is in `tests/oracle/`, with the script that writes it; CI downloads both sets at pinned commits and runs `tests/open_samples.rs` on all of them.
 
 ## Quality
 

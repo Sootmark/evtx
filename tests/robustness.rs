@@ -32,12 +32,13 @@ fn file_with_one_chunk(chunk_body: &[u8]) -> Vec<u8> {
     bytes
 }
 
-fn real_log() -> Option<Vec<u8>> {
+/// A real log of several chunks (CC0, `tests/fixtures/cc0/`).
+fn real_log() -> Vec<u8> {
     std::fs::read(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/tests/fixtures/security.evtx"
+        "/tests/fixtures/cc0/TA0007-Discovery/T1046-Network Service Scanning/ID131-RDP brutforce (no user info).evtx"
     ))
-    .ok()
+    .unwrap()
 }
 
 #[test]
@@ -49,7 +50,7 @@ fn rejects_non_evtx_files() {
 
 #[test]
 fn a_truncated_copy_reports_its_partial_chunk() {
-    let Some(log) = real_log() else { return };
+    let log = real_log();
     let cut = FILE_HEADER_SIZE + CHUNK_SIZE + 30_000;
     let file = EvtxFile::new(&log[..cut]).unwrap();
     let chunks: Vec<_> = file.chunks().collect();
@@ -94,7 +95,7 @@ proptest! {
     fn corrupted_real_chunks_never_panic(
         flips in proptest::collection::vec((0..CHUNK_SIZE, any::<u8>()), 1..40),
     ) {
-        let Some(log) = real_log() else { return Ok(()) };
+        let log = real_log();
         let mut bytes = log[..FILE_HEADER_SIZE + CHUNK_SIZE].to_vec();
         for (at, value) in flips {
             bytes[FILE_HEADER_SIZE + at] = value;
